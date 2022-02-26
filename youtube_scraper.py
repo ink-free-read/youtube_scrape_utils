@@ -120,7 +120,7 @@ class YoutubeScraper:
         self.check_cache_dir_defined()
         return os.path.join(
             self.cache_dir,
-            file_name + ext,
+            file_name.replace(os.sep, '_') + ext,
         )
 
     def read_json_from_cache(
@@ -169,20 +169,20 @@ class YoutubeScraper:
         :param playlist_item: PlaylistItem to source information on
         :return: Information dictionary of PlaylistItem
         """
-        file_name = playlist_item.snippet.resourceId.videoId
+        video_id = playlist_item.snippet.resourceId.videoId
+        video_title = playlist_item.snippet.title
 
-        if local_json := self.read_json_from_cache(file_name):
+        if local_json := self.read_json_from_cache(video_title):
             return local_json
 
         d = {}
-        d['video_id'] = file_name
-        this_video_title = playlist_item.snippet.title
-        d['video_title'] = this_video_title
-        transcript = self.get_transcript(file_name)
+        d['video_id'] = video_id
+        d['video_title'] = video_title
+        transcript = self.get_transcript(video_id)
         d['transcript'] = transcript
 
         if self.cache_dir:
-            self.write_json_to_cache(d, file_name)
+            self.write_json_to_cache(d, video_title)
 
         return d
 
