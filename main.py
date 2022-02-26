@@ -28,33 +28,19 @@ class YoutubeScraper:
             ])
         return lines
 
-
-        html = '\n'.join(lines)
-        # with open(output_html, "w") as file1:
-        #     file1.writelines(all_lines)
-        x = 2
-
     def transcript_dict_from_playlist(self, playlist_id):
         ids = []
         titles = []
         transcripts = []
         playlist_items = self.playlist_items_from_playlist_id(playlist_id)
-        for i, video in enumerate(playlist_items):
+        for i, video in enumerate(playlist_items[:2]):
             print(f"Scraping video {i + 1}/{len(playlist_items)}...", end='\r')
             this_video_id = video.snippet.resourceId.videoId
             ids.append(this_video_id)
             titles.append(video.snippet.title)
 
-            # these_lines = [f'<h1>{video.snippet.title}</h1>\n']
             srt = self.get_transcript(this_video_id)
             transcripts.append(srt)
-            # srt_lines_formatted = [
-            #     self.srt_line_to_link(
-            #         video_id=this_video_id,
-            #         text=_srt['text'],
-            #         start=_srt['start']
-            #     ) for _srt in srt
-            # ]
         return ids, titles, transcripts
 
     def srt_line_to_link(self, video_id, text, start):
