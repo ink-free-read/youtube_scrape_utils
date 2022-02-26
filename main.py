@@ -1,13 +1,17 @@
+import os
+import json
+
 from pyyoutube import Api
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import TranscriptsDisabled
 
 
 class YoutubeScraper:
-    def __init__(self, api_key_dir='./api_key.txt'):
+    def __init__(self, api_key_dir='./api_key.txt', cache_dir=None):
         with open(api_key_dir, "r+") as file:
             api_key = file.read()
         self.py_youtube_api = Api(api_key=api_key)
+        self.cache_dir = cache_dir
 
     def transcript_html_from_playlist(self, playlist_id, sep='\n'):
         return sep.join(
@@ -15,9 +19,13 @@ class YoutubeScraper:
         )
 
     def transcript_html_lines_from_playlist(self, playlist_id):
-        transcripts = self.transcript_dict_from_playlist(playlist_id)
+        transcript_dicts = self.transcript_dicts_from_playlist_id(playlist_id)
         lines = []
-        for id, title, transcript in zip(*transcripts):
+        for transcipt_dict in transcript_dicts:
+            id = transcipt_dict['video_id']
+            title = transcipt_dict['video_title']
+            transcript = transcipt_dict['transcript']
+
             lines.append(f'<h1>{title}</h1>')
             lines.extend([
                 self.srt_line_to_link(
@@ -28,20 +36,64 @@ class YoutubeScraper:
             ])
         return lines
 
-    def transcript_dict_from_playlist(self, playlist_id):
-        ids = []
-        titles = []
-        transcripts = []
+    def transcript_dicts_from_playlist_id(self, playlist_id):
+        dicts = []
         playlist_items = self.playlist_items_from_playlist_id(playlist_id)
-        for i, video in enumerate(playlist_items[:2]):
+        for i, playlist_item in enumerate(playlist_items):
             print(f"Scraping video {i + 1}/{len(playlist_items)}...", end='\r')
-            this_video_id = video.snippet.resourceId.videoId
-            ids.append(this_video_id)
-            titles.append(video.snippet.title)
+            this_dict = self.transcript_dict_from_playlist(playlist_item)
+            #if this_dict['transcript'] and self.cache_dir:
 
-            srt = self.get_transcript(this_video_id)
-            transcripts.append(srt)
-        return ids, titles, transcripts
+            dicts.append(this_dict)
+        return dicts
+
+    #
+    # def cache_dict_result(self, id_key):
+
+    # def decorator(func):
+    #         def cacher():
+    #             if self.cache_dir:
+    #                 file_dir = os.path.join(
+    #                     self.cache_dir,
+    #                     id,
+    #                 )
+    #                 if os.path.isfile(file_dir):
+    #                     return json.loads(file_dir)
+    #             else:
+    #                 func()
+    #
+    #             pass
+    #         return cacher
+    #     return decorator
+    #@self.cache_dict_rsults(fn_func=lambda kwargs: kwargs[])
+
+    def transcript_dict_from_playlist(self, playlist_item):
+        fn = playlist_item.snippet.resourceId.videoId
+        if self.cache_dir:
+            cache_file_dir = os.path.join(
+                self.cache_dir,
+                fn + '.json',
+            )
+            if os.path.isfile(cache_file_dir):
+                with open(cache_file_dir) as file:
+                    return json.load(file)
+
+        d = {}
+        d['video_id'] = fn
+        this_video_id = playlist_item.snippet.title
+        d['video_title'] = this_video_id
+        srt = self.get_transcript(fn)
+        d['transcript'] = srt
+
+        if self.cache_dir:
+            cache_file_dir = os.path.join(
+                self.cache_dir,
+                fn + '.json',
+            )
+            with open(cache_file_dir, 'w') as file:
+                json.dump(d, file)
+
+        return d
 
     def srt_line_to_link(self, video_id, text, start):
         return f'<a href="https://youtu.be/{video_id}?t={int(start)}">{text}</a>'
