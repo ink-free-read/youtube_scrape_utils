@@ -58,7 +58,7 @@ class YoutubeScraper:
         return ids, titles, transcripts
 
     def srt_line_to_link(self, video_id, text, start):
-        return f'<a href="https://youtu.be/{video_id}?t={int(start)}">{text}</a><br>'
+        return f'<a href="https://youtu.be/{video_id}?t={int(start)}">{text}</a>'
 
     def playlist_items_from_playlist_id(self, playlist_id):
         return self.py_youtube_api.get_playlist_items(
