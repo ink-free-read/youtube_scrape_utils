@@ -47,36 +47,37 @@ class YoutubeScraper:
             dicts.append(this_dict)
         return dicts
 
-    #
-    # def cache_dict_result(self, id_key):
+    def check_cache_dir_defined(self):
+        if not self.cache_dir:
+            raise ValueError("No cache directory input.")
 
-    # def decorator(func):
-    #         def cacher():
-    #             if self.cache_dir:
-    #                 file_dir = os.path.join(
-    #                     self.cache_dir,
-    #                     id,
-    #                 )
-    #                 if os.path.isfile(file_dir):
-    #                     return json.loads(file_dir)
-    #             else:
-    #                 func()
-    #
-    #             pass
-    #         return cacher
-    #     return decorator
-    #@self.cache_dict_rsults(fn_func=lambda kwargs: kwargs[])
+    def cache_file_dir(self, file_name, ext=''):
+        self.check_cache_dir_defined()
+        return os.path.join(
+            self.cache_dir,
+            file_name + ext,
+        )
+
+    def read_json_from_cache(self, fn):
+        self.check_cache_dir_defined()
+        cache_file_dir = self.cache_file_dir(fn, '.json')
+        if os.path.isfile(cache_file_dir):
+            with open(cache_file_dir) as file:
+                return json.load(file)
+        else:
+            return None
+
+    def write_json_to_cache(self, fn):
+        self.check_cache_dir_defined()
+        cache_file_dir = self.cache_file_dir(fn, '.json')
+        with open(cache_file_dir, 'w') as file:
+            json.dump(d, file)
 
     def transcript_dict_from_playlist(self, playlist_item):
         fn = playlist_item.snippet.resourceId.videoId
-        if self.cache_dir:
-            cache_file_dir = os.path.join(
-                self.cache_dir,
-                fn + '.json',
-            )
-            if os.path.isfile(cache_file_dir):
-                with open(cache_file_dir) as file:
-                    return json.load(file)
+
+        if local_json := self.read_json_from_cache(fn):
+            return local_json
 
         d = {}
         d['video_id'] = fn
@@ -86,12 +87,7 @@ class YoutubeScraper:
         d['transcript'] = srt
 
         if self.cache_dir:
-            cache_file_dir = os.path.join(
-                self.cache_dir,
-                fn + '.json',
-            )
-            with open(cache_file_dir, 'w') as file:
-                json.dump(d, file)
+            self.write_json_to_cache(fn)
 
         return d
 
