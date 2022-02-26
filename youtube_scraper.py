@@ -122,7 +122,6 @@ class YoutubeScraper:
 
     @staticmethod
     def srt_line_to_link(
-            self,
             video_id: str,
             text: str,
             start: float,
@@ -140,7 +139,6 @@ class YoutubeScraper:
 
     @staticmethod
     def get_transcript(
-            self,
             video_id: str,
     ) -> typing.List[dict]:
         try:
