@@ -2,7 +2,7 @@ import os
 import json
 import typing
 
-from pyyoutube import Api
+from pyyoutube import Api, PlaylistItem
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import TranscriptsDisabled
 
@@ -101,22 +101,22 @@ class YoutubeScraper:
 
     def transcript_dict_from_playlist_item(
             self,
-            playlist_item: pyyoutube.models.playlist_item.PlaylistItem,
+            playlist_item: PlaylistItem,
     ) -> dict:
-        fn = playlist_item.snippet.resourceId.videoId
+        file_name = playlist_item.snippet.resourceId.videoId
 
-        if local_json := self.read_json_from_cache(fn):
+        if local_json := self.read_json_from_cache(file_name):
             return local_json
 
         d = {}
-        d['video_id'] = fn
-        this_video_id = playlist_item.snippet.title
-        d['video_title'] = this_video_id
-        srt = self.get_transcript(fn)
+        d['video_id'] = file_name
+        this_video_title = playlist_item.snippet.title
+        d['video_title'] = this_video_title
+        srt = self.get_transcript(file_name)
         d['transcript'] = srt
 
         if self.cache_dir:
-            self.write_json_to_cache(fn)
+            self.write_json_to_cache(d, file_name)
 
         return d
 
@@ -131,7 +131,7 @@ class YoutubeScraper:
     def playlist_items_from_playlist_id(
             self,
             playlist_id: str,
-    ) -> typing.List[pyyoutube.models.playlist_item.PlaylistItem]:
+    ) -> typing.List[PlaylistItem]:
         return self.py_youtube_api.get_playlist_items(
             playlist_id=playlist_id,
             count=None
