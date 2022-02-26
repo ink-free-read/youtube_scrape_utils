@@ -1,1 +1,1 @@
-from .main import YoutubeScraper
+from .youtube_scraper import YoutubeScraper
