@@ -39,7 +39,7 @@ class YoutubeScraper:
         titles = []
         transcripts = []
         playlist_items = self.playlist_items_from_playlist_id(playlist_id)
-        for i, video in enumerate(playlist_items[:2]):
+        for i, video in enumerate(playlist_items):
             print(f"Scraping video {i + 1}/{len(playlist_items)}...", end='\r')
             this_video_id = video.snippet.resourceId.videoId
             ids.append(this_video_id)
